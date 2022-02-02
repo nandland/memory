@@ -5,4 +5,4 @@ This repository can be imported for use in your own projects. I have found succe
 
 First navigate to directory to import this repository. Then do:
 
-git subtree add --prefix fifo https://github.com/nandland/fifo.git master --squash
+git subtree add --prefix memory https://github.com/nandland/memory.git master --squash
