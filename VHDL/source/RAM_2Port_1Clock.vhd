@@ -1,19 +1,21 @@
 -- Russell Merrick - http://www.nandland.com
 --
--- Creates a Dual Port RAM. 
---
+-- Creates a Dual (2) Port RAM running off a single clock. 
+-- Single port RAM has one port, so can only access one memory location at a time.
+-- Dual port RAM can read and write to different memory locations at the same time.
+-- 
 -- Generic: WIDTH sets the width of the Memory created.
 -- Generic: DEPTH sets the depth of the Memory created.
 -- Likely tools will infer Block RAM if WIDTH/DEPTH is large enough.
 -- If small, tools will infer register-based memory.
 -- 
--- Uses a single clock for both ports.
+-- Uses a single clock for both ports, so can't be used to cross clock domains.
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity RAM_Dual_Port_Single_Clock is
+entity RAM_2Port_1Clock is
   generic (
     DEPTH : integer := 64;
     WIDTH : integer := 2
@@ -26,9 +28,9 @@ entity RAM_Dual_Port_Single_Clock is
     i_Rd_Addr : in  std_logic_vector; -- Gets sized at higher level
     o_Rd_Data : out std_logic_vector(WIDTH-1 downto 0)
     );
-end RAM_Dual_Port_Single_Clock;
+end RAM_2Port_1Clock;
 
-architecture RTL of RAM_Dual_Port_Single_Clock is
+architecture RTL of RAM_2Port_1Clock is
 
   -- Create Memory that is DEPTH x WIDTH
   type t_Mem is array (DEPTH-1 to 0) of std_logic_vector(WIDTH-1 downto 0);

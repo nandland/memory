@@ -1,17 +1,17 @@
 // Russell Merrick - http://www.nandland.com
 //
-// Creates a Dual Port RAM. 
-// Allows for reading and writing simultaneously
-// as opposed to a single port RAM which can only do one or the other.
+// Creates a Dual (2) Port RAM, running of a single clock. 
+// Single port RAM has one port, so can only access one memory location at a time.
+// Dual port RAM can read and write to different memory locations at the same time.
 //
 // WIDTH sets the width of the Memory created.
 // DEPTH sets the depth of the Memory created.
 // Likely tools will infer Block RAM if WIDTH/DEPTH is large enough.
 // If small, tools will infer register-based memory.
 // 
-// Uses a single clock for both ports.
+// Uses a single clock for both ports, so cannot be used to cross clock domains.
 
-module RAM_Dual_Port_Single_Clock #(parameter WIDTH = 8, DEPTH = 256)
+module RAM_2Port_1Clock #(parameter WIDTH = 8, DEPTH = 256)
   (input                     i_Clk,
    // Port A Signals
    input [WIDTH-1:0]         i_PortA_Data,
