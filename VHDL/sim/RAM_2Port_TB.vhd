@@ -2,13 +2,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity RAM_2Port_1Clock_TB is
-end RAM_2Port_1Clock_TB;
+entity RAM_2Port_TB is
+end RAM_2Port_TB;
 
-architecture test of RAM_2Port_1Clock_TB is
+architecture test of RAM_2Port_TB is
 begin
 
-  UUT : entity work.RAM_2Port_1Clock
+  UUT : entity work.RAM_2Port
     generic map (
       DEPTH => 64,
       WIDTH => 2)

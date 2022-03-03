@@ -1,6 +1,6 @@
 // Russell Merrick - http://www.nandland.com
 //
-// Creates a Single Port RAM. 
+// Creates a Single Port RAM. (Random Access Memory)
 // Single port RAM has one port, so can only access one memory location at a time.
 // Dual port RAM can read and write to different memory locations at the same time.
 //
@@ -11,9 +11,14 @@
 
 module RAM_1Port #(parameter WIDTH = 16, parameter DEPTH = 256) (
   input                     i_Clk,
-  input                     i_WE,
+  // Shared address for writes and reads
   input [$clog2(DEPTH)-1:0] i_Addr,
+  // Write Interface
+  input                     i_Wr_DV,
   input [WIDTH-1:0]         i_Wr_Data,
+  // Read Interface
+  input                     i_Rd_En,
+  output reg                o_Rd_DV,
   output reg [WIDTH-1:0]    o_Rd_Data
   );
   
@@ -21,10 +26,18 @@ module RAM_1Port #(parameter WIDTH = 16, parameter DEPTH = 256) (
 
   always @(posedge i_Clk)
   begin
-    if (i_WE)
-      r_Mem[i_Addr] <= i_Wr_Data; // Handle writes
+    // Handle writes to memory
+    if (i_Wr_DV)
+    begin
+      r_Mem[i_Addr] <= i_Wr_Data;
+    end
 
-    o_Rd_Data <= r_Mem[i_Addr];   // Handle Reads (update o_Rd_Data on every clock edge)
+    // Handle reads from memory
+    if (i_Rd_En)
+    begin
+      o_Rd_Data <= r_Mem[i_Addr];
+    end
+    o_Rd_DV <= i_Rd_En; // Generate DV pulse
   end
 
 endmodule

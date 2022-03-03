@@ -8,7 +8,7 @@ module RAM_1Port_TB ();
   localparam WIDTH = 8;
 
   reg r_Clk = 1'b0;
-  reg r_WE = 1'b0;
+  reg r_Wr_En = 1'b0, r_Rd_En = 1'b0;
   reg [$clog2(DEPTH)-1:0] r_Addr = 0;
   reg [WIDTH-1:0] r_Wr_Data = 0;
   wire [WIDTH-1:0] w_Rd_Data;
@@ -17,11 +17,13 @@ module RAM_1Port_TB ();
 
   RAM_1Port #(.WIDTH(WIDTH), .DEPTH(DEPTH)) UUT 
   (.i_Clk(r_Clk),
-  .i_WE(r_WE),
-  .i_Addr(r_Addr),
-  .i_Wr_Data(r_Wr_Data),
-  .o_Rd_Data(w_Rd_Data)
-  );
+   .i_Addr(r_Addr),
+   .i_Wr_DV(r_Wr_En),
+   .i_Wr_Data(r_Wr_Data),
+   .i_Rd_En(r_Rd_En),
+   .o_Rd_DV(w_Rd_DV),
+   .o_Rd_Data(w_Rd_Data)
+   );
 
   initial
   begin 
@@ -32,7 +34,7 @@ module RAM_1Port_TB ();
     // Fill memory with incrementing pattern
     repeat(DEPTH)
     begin
-      r_WE <= 1'b1;
+      r_Wr_En <= 1'b1;
       @(posedge r_Clk);
       r_Wr_Data <= r_Wr_Data + 1;
       r_Addr    <= r_Addr + 1;
@@ -40,13 +42,15 @@ module RAM_1Port_TB ();
 
     // Read out incrementing pattern
     r_Addr  <= 0;
-    r_WE <= 1'b0;
+    r_Wr_En <= 1'b0;
     
     repeat(DEPTH)
     begin
+      r_Rd_En <= 1'b1;
       @(posedge r_Clk);
       r_Addr <= r_Addr + 1;
 	  end
+    r_Rd_En <= 0'b1;
 
     repeat(4) @(posedge r_Clk); // Give simulation a few clocks to end
 
