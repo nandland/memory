@@ -120,7 +120,7 @@ module FIFO #(parameter WIDTH = 8,
 
   assign o_Full  = (r_Count == DEPTH) || (r_Count == DEPTH-1 && i_Wr_DV && !i_Rd_En);
   
-  assign o_Empty = (r_Count == 0) || r_Count == 1 && !i_Wr_DV && i_Rd_En;
+  assign o_Empty = (r_Count == 0);
 
   assign o_AF_Flag = (r_Count > DEPTH - i_AF_Level);
   assign o_AE_Flag = (r_Count <= i_AE_Level);

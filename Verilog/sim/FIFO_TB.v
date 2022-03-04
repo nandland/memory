@@ -48,6 +48,7 @@ module FIFO_TB ();
 
   initial
   begin 
+    integer i;
     $dumpfile("dump.vcd"); $dumpvars; // for EDA Playground sim
     
     repeat(4) @(posedge r_Clk); // Give simulation a few clocks to start
@@ -72,12 +73,12 @@ module FIFO_TB ();
     @(posedge r_Clk);
     assert (w_Rd_DV);
     assert (w_Empty);
-    assert (w_Rd_Data == 8'hAB); // test FWFT
+    assert (w_Rd_Data == 8'hAB);
         
     repeat(4) @(posedge r_Clk);
 
-    /*
     // Fill FIFO with incrementing pattern
+    r_Wr_Data <= 8'h30;
     repeat(DEPTH)
     begin
       r_Wr_DV <= 1'b1;
@@ -87,19 +88,26 @@ module FIFO_TB ();
       r_Wr_Data <= r_Wr_Data + 1;
     end
     r_Wr_DV <= 1'b0;
+    @(posedge r_Clk);
+    assert (w_Full);
+    @(posedge r_Clk);
 
-    // Read out incrementing pattern
-    repeat(DEPTH)
+    // Read out and verify incrementing pattern
+    for (i=8'h30; i<8'h30 + DEPTH; i=i+1)
     begin
       r_Rd_En <= 1'b1;
       @(posedge r_Clk);
       r_Rd_En <= 1'b0;
       @(posedge r_Clk);
-	  end
-    r_Rd_En   <= 1'b0;
-    
+      assert (w_Rd_DV);
+      assert (w_Rd_Data == i) else $error("rd_data is %d i is %d", w_Rd_Data, i);
+      @(posedge r_Clk);
+    end
+    assert (w_Empty);
+
     repeat(4) @(posedge r_Clk); 
 
+    /*
     // Test ability to read by using the empty flag
     r_Test_Rd_On_Empty <= 1'b1;
     repeat(DEPTH)
