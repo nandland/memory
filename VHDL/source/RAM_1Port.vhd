@@ -49,10 +49,8 @@ begin
       end if;
 
       -- Handle reads from memory
-      if i_Rd_En = '1' then
-        o_Rd_Data <= r_Mem(to_integer(unsigned(i_Addr)));
-      end if;
-      o_Rd_DV <= i_Rd_En; -- Generate DV pulse
+      o_Rd_Data <= r_Mem(to_integer(unsigned(i_Addr)));
+      o_Rd_DV   <= i_Rd_En; -- Generate DV pulse
     end if;
   end process;
 

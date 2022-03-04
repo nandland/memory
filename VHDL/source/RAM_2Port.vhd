@@ -58,9 +58,7 @@ begin
   process (i_Rd_Clk)
   begin
     if rising_edge(i_Rd_Clk) then
-      if i_Rd_En = '1' then
-        o_Rd_Data <= r_Mem(to_integer(unsigned(i_Rd_Addr)));
-      end if;
+      o_Rd_Data <= r_Mem(to_integer(unsigned(i_Rd_Addr)));
       o_Rd_DV   <= i_Rd_En;
     end if;
   end process;

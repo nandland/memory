@@ -33,11 +33,8 @@ module RAM_1Port #(parameter WIDTH = 16, parameter DEPTH = 256) (
     end
 
     // Handle reads from memory
-    if (i_Rd_En)
-    begin
-      o_Rd_Data <= r_Mem[i_Addr];
-    end
-    o_Rd_DV <= i_Rd_En; // Generate DV pulse
+    o_Rd_Data <= r_Mem[i_Addr];
+    o_Rd_DV   <= i_Rd_En; // Generate DV pulse
   end
 
 endmodule

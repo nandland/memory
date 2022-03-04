@@ -41,11 +41,8 @@ module RAM_2Port #(parameter WIDTH = 16, DEPTH = 256)
   // Handle reads from memory
   always @ (posedge i_Rd_Clk)
   begin
-    if (i_Rd_En)
-    begin
-      o_Rd_Data <= r_Mem[i_Rd_Addr];
-    end
-    o_Rd_DV <= i_Rd_En;
+    o_Rd_Data <= r_Mem[i_Rd_Addr];
+    o_Rd_DV   <= i_Rd_En;
   end
 
 endmodule

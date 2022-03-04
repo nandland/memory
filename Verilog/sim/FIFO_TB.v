@@ -17,6 +17,9 @@ module FIFO_TB ();
   
   always #10 r_Clk <= !r_Clk; // create oscillating clock
 
+  reg r_Test_Rd_On_Empty = 1'b0;
+  wire w_Rd_Mux;
+
   FIFO #(.WIDTH(WIDTH), .DEPTH(DEPTH), .MAKE_FWFT(MAKE_FWFT)) UUT 
   (
   .i_Rst_L(r_Rst_L),
@@ -28,13 +31,20 @@ module FIFO_TB ();
   .o_AF_Flag(w_AF_Flag),
   .o_Full(w_Full),
   // Read Side
-  .i_Rd_En(r_Rd_En),
+  .i_Rd_En(w_Rd_Mux),
   .o_Rd_DV(w_Rd_DV),
   .o_Rd_Data(w_Rd_Data),
   .i_AE_Level(r_AE_Level),
   .o_AE_Flag(w_AE_Flag),
   .o_Empty(w_Empty)
   );
+
+  assign w_Rd_Mux = r_Test_Rd_On_Empty ? !w_Empty : r_Rd_En;
+
+  // To Test:
+  // Read when empty flag is false with always block (gated with another signal)
+  // Write when full flag is false with always block (gated with another signal)
+  // almost full/empty flags work as intended
 
   initial
   begin 
@@ -44,6 +54,29 @@ module FIFO_TB ();
     r_Rst_L <= 1'b1; // Release reset
     repeat(4) @(posedge r_Clk);
 
+    // Write single word, ensure it appears on output
+    r_Wr_DV   <= 1'b1;
+    r_Wr_Data <= 8'hAB;
+    @(posedge r_Clk);
+    r_Wr_DV   <= 1'b0;
+    @(posedge r_Clk);
+    assert (!w_Empty);
+    assert (w_Rd_Data == 8'hAB); // test FWFT
+
+    repeat(4) @(posedge r_Clk);
+
+    // Read out that word, ensure DV and empty is correct
+    r_Rd_En <= 1'b1;
+    @(posedge r_Clk);
+    r_Rd_En <= 1'b0;
+    @(posedge r_Clk);
+    assert (w_Rd_DV);
+    assert (w_Empty);
+    assert (w_Rd_Data == 8'hAB); // test FWFT
+        
+    repeat(4) @(posedge r_Clk);
+
+    /*
     // Fill FIFO with incrementing pattern
     repeat(DEPTH)
     begin
@@ -64,6 +97,30 @@ module FIFO_TB ();
       @(posedge r_Clk);
 	  end
     r_Rd_En   <= 1'b0;
+    
+    repeat(4) @(posedge r_Clk); 
+
+    // Test ability to read by using the empty flag
+    r_Test_Rd_On_Empty <= 1'b1;
+    repeat(DEPTH)
+    begin
+      r_Wr_DV <= 1'b1;
+      @(posedge r_Clk);
+      r_Wr_Data <= r_Wr_Data + 1;
+    end
+    r_Wr_DV <= 1'b0;
+    repeat(3) @(posedge r_Clk); 
+    r_Test_Rd_On_Empty <= 1'b0;
+
+    repeat(4) @(posedge r_Clk); 
+
+    // Test ability to write until we are full
+    while (!w_Full)
+    begin
+      r_Wr_DV <= 1'b1;
+      @(posedge r_Clk);
+    end
+    r_Wr_DV <= 1'b0;
 
     repeat(4) @(posedge r_Clk); 
 
@@ -79,7 +136,7 @@ module FIFO_TB ();
     @(posedge r_Clk);
     r_Rd_En <= 1'b0;
     repeat(3) @(posedge r_Clk);
-    
+    */
     $finish();
   end
 

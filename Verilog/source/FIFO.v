@@ -12,7 +12,11 @@
 // DEPTH     - Max number of items able to be stored in the FIFO
 // MAKE_FWFT - Use First-Word Fall Through. Make output immediately
 //             have first written word.  1=FWFT, 0=Regular
-
+//
+// This FIFO cannot be used to cross clock domains, because in order to keep count
+// correctly it would need to handle all metastability issues. 
+// If crossing clock domains is required, use FIFO primitives directly from the vendor.
+`include "RAM_2Port.sv"
 module FIFO #(parameter WIDTH = 8, 
               parameter DEPTH = 256, 
               parameter MAKE_FWFT = 0)
@@ -26,7 +30,7 @@ module FIFO #(parameter WIDTH = 8,
    output                    o_Full,
    // Read Side
    input                     i_Rd_En,
-   output reg                o_Rd_DV,
+   output                    o_Rd_DV,
    output reg [WIDTH-1:0]    o_Rd_Data,
    input [$clog2(DEPTH)-1:0] i_AE_Level,
    output                    o_AE_Flag,
@@ -65,7 +69,7 @@ module FIFO #(parameter WIDTH = 8,
     else
     begin
       // Write
-      if (i_Wr_DV & ~o_Full)
+      if (i_Wr_DV)
       begin
         if (r_Wr_Addr == DEPTH-1)
           r_Wr_Addr <= 0;
@@ -74,7 +78,7 @@ module FIFO #(parameter WIDTH = 8,
       end
 
       // Read
-      if (i_Rd_En & ~o_Empty)
+      if (i_Rd_En)
       begin
         if (r_Rd_Addr == DEPTH-1)
           r_Rd_Addr <= 0;
@@ -100,8 +104,8 @@ module FIFO #(parameter WIDTH = 8,
         end
       end
 
-      // Handle FWFT situation of Read/Write on same clock
-      if (i_Rd_En & i_Wr_DV & o_Empty & (MAKE_FWFT == 1))
+      // Handle FWFT 
+      if (i_Wr_DV & o_Empty & (MAKE_FWFT == 1))
       begin
         o_Rd_Data <= i_Wr_Data;
       end
@@ -114,10 +118,9 @@ module FIFO #(parameter WIDTH = 8,
   end // always @ (posedge i_Clk or negedge i_Rst_L)
 
 
-  assign o_Full  = (r_Count == DEPTH) || (r_Count == DEPTH-1 && i_Wr_DV == 1'b1);
+  assign o_Full  = (r_Count == DEPTH) || (r_Count == DEPTH-1 && i_Wr_DV && !i_Rd_En);
   
-  // THIS IS WRONG. PRODUCES EMPTY FLAG 1 READ TOO EARLY.
-  assign o_Empty = (r_Count == 0) || (r_Count == 1 && i_Rd_En == 1'b1);
+  assign o_Empty = (r_Count == 0) || r_Count == 1 && !i_Wr_DV && i_Rd_En;
 
   assign o_AF_Flag = (r_Count > DEPTH - i_AF_Level);
   assign o_AE_Flag = (r_Count <= i_AE_Level);
@@ -130,12 +133,12 @@ module FIFO #(parameter WIDTH = 8,
   // Ensures that we never read from empty FIFO or write to full FIFO.
   always @(posedge i_Clk)
   begin
-    if (i_Rd_En == 1'b1 && i_Wr_DV == 1'b0 && r_Count == 0)
+    if (i_Rd_En && !i_Wr_DV && r_Count == 0)
     begin
       $error("Error! Reading Empty FIFO");
     end
 
-    if (i_Wr_DV == 1'b1 && i_Rd_En == 1'b0 && r_Count == DEPTH)
+    if (i_Wr_DV && !i_Rd_En && r_Count == DEPTH)
     begin
       $error("Error! Writing Full FIFO");
     end
