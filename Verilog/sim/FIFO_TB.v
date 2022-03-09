@@ -15,11 +15,6 @@ module FIFO_TB ();
   wire w_AF_Flag, w_AE_Flag, w_Full, w_Empty, w_Rd_DV;
   wire [WIDTH-1:0] w_Rd_Data;
   
-  always #10 r_Clk <= !r_Clk; // create oscillating clock
-
-  reg r_Test_Rd_On_Empty = 1'b0;
-  wire w_Rd_Mux;
-
   FIFO #(.WIDTH(WIDTH), .DEPTH(DEPTH), .MAKE_FWFT(MAKE_FWFT)) UUT 
   (
   .i_Rst_L(r_Rst_L),
@@ -31,7 +26,7 @@ module FIFO_TB ();
   .o_AF_Flag(w_AF_Flag),
   .o_Full(w_Full),
   // Read Side
-  .i_Rd_En(w_Rd_Mux),
+  .i_Rd_En(r_Rd_En),
   .o_Rd_DV(w_Rd_DV),
   .o_Rd_Data(w_Rd_Data),
   .i_AE_Level(r_AE_Level),
@@ -39,7 +34,7 @@ module FIFO_TB ();
   .o_Empty(w_Empty)
   );
 
-  assign w_Rd_Mux = r_Test_Rd_On_Empty ? !w_Empty : r_Rd_En;
+  always #10 r_Clk <= !r_Clk; // create oscillating clock
 
   // This task triggers a reset condition to the FIFO.
   task reset_fifo();

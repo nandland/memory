@@ -43,7 +43,7 @@ module FIFO #(parameter WIDTH = 8,
   wire w_Rd_DV;
   wire [WIDTH-1:0] w_Rd_Data;
 
-  // Dual Port RAM used for storing Information bytes
+  // Dual Port RAM used for storing FIFO data
   RAM_2Port #(.WIDTH(WIDTH), .DEPTH(DEPTH)) FIFO_Inst 
     (// Write Port
      .i_Wr_Clk(i_Clk),   
