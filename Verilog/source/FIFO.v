@@ -16,7 +16,7 @@
 // This FIFO cannot be used to cross clock domains, because in order to keep count
 // correctly it would need to handle all metastability issues. 
 // If crossing clock domains is required, use FIFO primitives directly from the vendor.
-`include "RAM_2Port.sv"
+
 module FIFO #(parameter WIDTH = 8, 
               parameter DEPTH = 256, 
               parameter MAKE_FWFT = 0)
@@ -123,7 +123,7 @@ module FIFO #(parameter WIDTH = 8,
   assign o_Empty = (r_Count == 0);
 
   assign o_AF_Flag = (r_Count > DEPTH - i_AF_Level);
-  assign o_AE_Flag = (r_Count <= i_AE_Level);
+  assign o_AE_Flag = (r_Count < i_AE_Level);
 
   assign o_Rd_DV = w_Rd_DV;
 

@@ -11,7 +11,7 @@ module FIFO_TB ();
   reg r_Clk = 1'b0, r_Rst_L = 1'b0;
   reg r_Wr_DV = 1'b0, r_Rd_En = 1'b0;
   reg [WIDTH-1:0] r_Wr_Data = 0;
-  reg [$clog2(DEPTH)-1:0] r_AF_Level = 0, r_AE_Level = 0;
+  reg [$clog2(DEPTH)-1:0] r_AF_Level = DEPTH-1, r_AE_Level = 1;
   wire w_AF_Flag, w_AE_Flag, w_Full, w_Empty, w_Rd_DV;
   wire [WIDTH-1:0] w_Rd_Data;
   
@@ -41,19 +41,25 @@ module FIFO_TB ();
 
   assign w_Rd_Mux = r_Test_Rd_On_Empty ? !w_Empty : r_Rd_En;
 
-  // To Test:
-  // Read when empty flag is false with always block (gated with another signal)
-  // Write when full flag is false with always block (gated with another signal)
-  // almost full/empty flags work as intended
+  // This task triggers a reset condition to the FIFO.
+  task reset_fifo();
+    @(posedge r_Clk);
+    r_Rst_L <= 1'b0;
+    r_Wr_DV <= 1'b0;  // ensure rd/wr are off
+    r_Rd_En <= 1'b0;
+    @(posedge r_Clk);
+    r_Rst_L <= 1'b1;
+    @(posedge r_Clk);
+    @(posedge r_Clk);
+  endtask
+
 
   initial
   begin 
     integer i;
     $dumpfile("dump.vcd"); $dumpvars; // for EDA Playground sim
     
-    repeat(4) @(posedge r_Clk); // Give simulation a few clocks to start
-    r_Rst_L <= 1'b1; // Release reset
-    repeat(4) @(posedge r_Clk);
+    reset_fifo();
 
     // Write single word, ensure it appears on output
     r_Wr_DV   <= 1'b1;
@@ -74,10 +80,10 @@ module FIFO_TB ();
     assert (w_Rd_DV);
     assert (w_Empty);
     assert (w_Rd_Data == 8'hAB);
-        
-    repeat(4) @(posedge r_Clk);
 
-    // Fill FIFO with incrementing pattern
+
+    // Test: Fill FIFO with incrementing pattern, then read it back.
+    reset_fifo();
     r_Wr_Data <= 8'h30;
     repeat(DEPTH)
     begin
@@ -105,46 +111,45 @@ module FIFO_TB ();
     end
     assert (w_Empty);
 
-    repeat(4) @(posedge r_Clk); 
 
-    /*
-    // Test ability to read by using the empty flag
-    r_Test_Rd_On_Empty <= 1'b1;
-    repeat(DEPTH)
-    begin
-      r_Wr_DV <= 1'b1;
-      @(posedge r_Clk);
-      r_Wr_Data <= r_Wr_Data + 1;
-    end
-    r_Wr_DV <= 1'b0;
-    repeat(3) @(posedge r_Clk); 
-    r_Test_Rd_On_Empty <= 1'b0;
-
-    repeat(4) @(posedge r_Clk); 
-
-    // Test ability to write until we are full
-    while (!w_Full)
-    begin
-      r_Wr_DV <= 1'b1;
-      @(posedge r_Clk);
-    end
-    r_Wr_DV <= 1'b0;
-
-    repeat(4) @(posedge r_Clk); 
-
-    // Test reading and writing at the same time
-    r_Wr_Data <= 84;
+    // Test: Read and write on same clock cycle when empty + full
+    reset_fifo();
     r_Rd_En <= 1'b1;
     r_Wr_DV <= 1'b1;
     @(posedge r_Clk);
-    r_Rd_En <= 1'b0;
-    r_Wr_DV <= 1'b0;
-    repeat(3) @(posedge r_Clk);
-    r_Rd_En <= 1'b1;
     @(posedge r_Clk);
     r_Rd_En <= 1'b0;
-    repeat(3) @(posedge r_Clk);
-    */
+    repeat(DEPTH) @(posedge r_Clk);
+    assert (w_Full);
+    r_Rd_En <= 1'b1;
+    @(posedge r_Clk);
+    assert (w_Full);
+    @(posedge r_Clk);
+    assert (w_Full);
+    r_Wr_DV <= 1'b0;
+    r_Rd_En <= 1'b0;
+
+    // Test: Almost Empty, Almost Full Flags
+    // AE is set to 1, AF is set to 3
+    reset_fifo();
+    assert (w_AE_Flag);
+    assert (!w_AF_Flag);
+    
+    r_Wr_DV <= 1'b1;
+    @(posedge r_Clk);
+    assert (w_AE_Flag);
+    assert (!w_AF_Flag);
+    @(posedge r_Clk);
+    assert (!w_AE_Flag);
+    assert (!w_AF_Flag);
+    @(posedge r_Clk);
+    assert (!w_AE_Flag);
+    assert (w_AF_Flag);
+    @(posedge r_Clk);
+    assert (!w_AE_Flag);
+    assert (w_AF_Flag);
+    assert (w_Full);  
+
     $finish();
   end
 
